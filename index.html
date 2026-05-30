@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMS Compliance Checker</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      font-size: 1.1em;
+      opacity: 0.9;
+    }
+
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+
+    .input-section {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #333;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 12px;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 14px;
+      font-family: inherit;
+      resize: vertical;
+      transition: border-color 0.3s;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .char-count {
+      text-align: right;
+      font-size: 12px;
+      color: #666;
+      margin-top: 5px;
+    }
+
+    .char-count.warning {
+      color: #f59e0b;
+    }
+
+    .char-count.error {
+      color: #ef4444;
+    }
+
+    button {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+      width: 100%;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    button:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: #667eea;
+    }
+
+    .spinner {
+      border: 3px solid #f3f3f3;
+      border-top: 3px solid #667eea;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .results {
+      margin-top: 20px;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-weight: 600;
+      font-size: 14px;
+      margin-bottom: 20px;
+    }
+
+    .status-compliant {
+      background: #d1fae5;
+      color: #065f46;
+    }
+
+    .status-warning {
+      background: #fef3c7;
+      color: #92400e;
+    }
+
+    .status-non-compliant {
+      background: #fee2e2;
+      color: #991b1b;
+    }
+
+    .section {
+      margin-bottom: 25px;
+    }
+
+    .section h3 {
+      color: #333;
+      margin-bottom: 12px;
+      font-size: 1.2em;
+    }
+
+    .issue-item, .recommendation-item {
+      background: #f9fafb;
+      border-left: 4px solid #667eea;
+      padding: 12px;
+      margin-bottom: 10px;
+      border-radius: 4px;
+    }
+
+    .issue-item.critical {
+      border-left-color: #dc2626;
+      background: #fef2f2;
+    }
+
+    .issue-item.high {
+      border-left-color: #ea580c;
+      background: #fff7ed;
+    }
+
+    .issue-item.medium {
+      border-left-color: #f59e0b;
+      background: #fffbeb;
+    }
+
+    .severity-badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      margin-left: 8px;
+    }
+
+    .severity-critical {
+      background: #dc2626;
+      color: white;
+    }
+
+    .severity-high {
+      background: #ea580c;
+      color: white;
+    }
+
+    .severity-medium {
+      background: #f59e0b;
+      color: white;
+    }
+
+    .severity-low {
+      background: #6b7280;
+      color: white;
+    }
+
+    .rewrite-box {
+      background: #ecfdf5;
+      border: 2px solid #10b981;
+      border-radius: 8px;
+      padding: 16px;
+      margin-top: 10px;
+    }
+
+    .rewrite-box h4 {
+      color: #065f46;
+      margin-bottom: 8px;
+    }
+
+    .rewrite-text {
+      color: #064e3b;
+      line-height: 1.6;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .info-item {
+      background: #f9fafb;
+      padding: 12px;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .info-label {
+      font-size: 12px;
+      color: #6b7280;
+      margin-bottom: 4px;
+    }
+
+    .info-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: #111827;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 40px;
+      color: #6b7280;
+    }
+
+    .risk-explanation {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 16px;
+      margin: 16px 0;
+      border-radius: 4px;
+    }
+
+    .risk-explanation.critical {
+      background: #fee2e2;
+      border-left-color: #dc2626;
+    }
+
+    .risk-explanation.high {
+      background: #fed7aa;
+      border-left-color: #ea580c;
+    }
+
+    .risk-explanation h4 {
+      color: #78350f;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .risk-explanation.critical h4 {
+      color: #991b1b;
+    }
+
+    .risk-explanation.high h4 {
+      color: #9a3412;
+    }
+
+    .risk-explanation p {
+      color: #78350f;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .risk-explanation.critical p {
+      color: #991b1b;
+    }
+
+    .risk-explanation.high p {
+      color: #9a3412;
+    }
+
+    .issue-explanation {
+      margin-top: 8px;
+      padding: 12px;
+      background: #f9fafb;
+      border-radius: 6px;
+      font-size: 13px;
+      color: #374151;
+      line-height: 1.5;
+    }
+
+    .source-links {
+      margin-top: 8px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .source-link {
+      display: inline-flex;
+      align-items: center;
+      padding: 4px 10px;
+      background: #eff6ff;
+      color: #1d4ed8;
+      text-decoration: none;
+      border-radius: 4px;
+      font-size: 12px;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+
+    .source-link:hover {
+      background: #dbeafe;
+    }
+
+    .source-link::before {
+      content: '🔗';
+      margin-right: 4px;
+    }
+
+    .rewrite-button {
+      background: #10b981;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+      transition: background 0.2s;
+    }
+
+    .rewrite-button:hover {
+      background: #059669;
+    }
+
+    .rewrite-button:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+
+    .detected-intent {
+      background: #f3f4f6;
+      border-left: 4px solid #6366f1;
+      padding: 12px 16px;
+      margin: 16px 0;
+      border-radius: 4px;
+    }
+
+    .detected-intent strong {
+      color: #4338ca;
+      font-size: 14px;
+    }
+
+    .detected-intent p {
+      color: #4b5563;
+      font-size: 13px;
+      margin-top: 4px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .rewrite-container {
+      margin-top: 12px;
+    }
+
+    .no-rewrite-explanation {
+      background: #fef3c7;
+      border-left: 4px solid #f59e0b;
+      padding: 12px 16px;
+      margin-top: 12px;
+      border-radius: 4px;
+    }
+
+    .no-rewrite-explanation strong {
+      color: #78350f;
+      font-size: 14px;
+    }
+
+    .no-rewrite-explanation p {
+      color: #78350f;
+      font-size: 13px;
+      margin-top: 4px;
+      line-height: 1.5;
+    }
+
+    .stale-results-warning {
+      background: #fef3c7;
+      border: 2px solid #f59e0b;
+      padding: 12px 16px;
+      border-radius: 8px;
+      margin: 16px 0;
+      font-weight: 600;
+      color: #78350f;
+      text-align: center;
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.8; }
+    }
+
+    .results.dimmed {
+      opacity: 0.5;
+      pointer-events: none;
+      filter: grayscale(20%);
+    }
+
+    .message-type-toggle {
+      margin-bottom: 20px;
+      padding: 15px;
+      background: #f9fafb;
+      border-radius: 8px;
+    }
+
+    .message-type-toggle label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #374151;
+    }
+
+    .toggle-buttons {
+      display: flex;
+      gap: 10px;
+    }
+
+    .toggle-button {
+      flex: 1;
+      padding: 12px 16px;
+      border: 2px solid #e5e7eb;
+      background: white;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      color: #6b7280;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .toggle-button:hover {
+      border-color: #9ca3af;
+      background: #f9fafb;
+    }
+
+    .toggle-button.active {
+      border-color: #667eea;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      font-weight: 600;
+    }
+
+    .toggle-button.active:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "react": "https://esm.sh/react@18.2.0",
+        "react-dom/client": "https://esm.sh/react-dom@18.2.0/client"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import React from 'react';
+    import ReactDOM from 'react-dom/client';
+
+    const { useState, useEffect } = React;
+
+    function App() {
+      const [messageBody, setMessageBody] = useState('');
+      const [lastAnalyzedMessage, setLastAnalyzedMessage] = useState('');
+      const [messageType, setMessageType] = useState('marketing');
+      const [loading, setLoading] = useState(false);
+      const [results, setResults] = useState(null);
+      const [error, setError] = useState(null);
+
+      const charCount = messageBody.length;
+      const segmentCount = Math.ceil(charCount / 160);
+      const hasMessageChanged = results && (messageBody !== lastAnalyzedMessage);
+
+      const handleCheck = async () => {
+        if (!messageBody.trim()) return;
+
+        setLoading(true);
+        setError(null);
+        setResults(null);
+
+        try {
+          const response = await fetch('http://localhost:3001/api/check-compliance', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ messageBody, messageType })
+          });
+
+          if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.error || 'Failed to check compliance');
+          }
+
+          const data = await response.json();
+          setResults(data);
+          setLastAnalyzedMessage(messageBody);
+        } catch (err) {
+          setError(err.message);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      return React.createElement('div', { className: 'container' },
+        React.createElement('div', { className: 'header' },
+          React.createElement('h1', null, '📱 SMS Compliance Checker'),
+          React.createElement('p', null, 'Verify your SMS messages against messaging policies and US regulations')
+        ),
+
+        React.createElement('div', { className: 'card' },
+          React.createElement('div', { className: 'message-type-toggle' },
+            React.createElement('label', null, 'Message Type:'),
+            React.createElement('div', { className: 'toggle-buttons' },
+              React.createElement('button', {
+                className: `toggle-button ${messageType === 'marketing' ? 'active' : ''}`,
+                onClick: () => setMessageType('marketing')
+              }, '📢 Marketing/Promotional'),
+              React.createElement('button', {
+                className: `toggle-button ${messageType === 'support' ? 'active' : ''}`,
+                onClick: () => setMessageType('support')
+              }, '💬 Support/Transactional')
+            )
+          ),
+
+          React.createElement('div', { className: 'input-section' },
+            React.createElement('label', { htmlFor: 'message' }, 'SMS Message Body'),
+            React.createElement('textarea', {
+              id: 'message',
+              value: messageBody,
+              onChange: (e) => setMessageBody(e.target.value),
+              placeholder: messageType === 'marketing'
+                ? 'Enter your marketing/promotional SMS message here...'
+                : 'Enter your support/transactional SMS message here...'
+            }),
+            React.createElement('div', {
+              className: `char-count ${charCount > 160 ? 'warning' : ''} ${charCount > 1600 ? 'error' : ''}`
+            }, `${charCount} characters • ${segmentCount} segment${segmentCount !== 1 ? 's' : ''}`)
+          ),
+
+          React.createElement('button', {
+            onClick: handleCheck,
+            disabled: loading || !messageBody.trim()
+          }, loading ? 'Checking...' :
+             hasMessageChanged ? 'Re-Check Compliance' :
+             'Check Compliance')
+        ),
+
+        hasMessageChanged &&
+          React.createElement('div', { className: 'stale-results-warning' },
+            '⚠️ Message changed - Click "Re-Check Compliance" to analyze the updated message'
+          ),
+
+        loading && React.createElement('div', { className: 'card loading' },
+          React.createElement('div', { className: 'spinner' }),
+          React.createElement('p', null, 'Analyzing message...')
+        ),
+
+        error && React.createElement('div', { className: 'card' },
+          React.createElement('div', {
+            style: { color: '#dc2626', textAlign: 'center', padding: '20px' }
+          }, `Error: ${error}`)
+        ),
+
+        results && React.createElement(Results, { data: results, dimmed: hasMessageChanged })
+      );
+    }
+
+    function Results({ data, dimmed }) {
+      const { summary, ruleBasedChecks, aiAnalysis } = data;
+      const [showRewrite, setShowRewrite] = useState(false);
+
+      const hasIssues = summary.totalIssues > 0;
+      const riskLevel = summary.riskLevel;
+      const showRiskExplanation = ['medium', 'high', 'critical'].includes(riskLevel);
+
+      return React.createElement('div', { className: `card results ${dimmed ? 'dimmed' : ''}` },
+        React.createElement('span', {
+          className: `status-badge status-${summary.overallStatus}`
+        }, summary.overallStatus === 'compliant' ? '✅ Compliant' :
+           summary.overallStatus === 'warning' ? '⚠️ Warning' :
+           '❌ Non-Compliant'),
+
+        React.createElement('div', { className: 'info-grid' },
+          React.createElement('div', { className: 'info-item' },
+            React.createElement('div', { className: 'info-label' }, 'Risk Level'),
+            React.createElement('div', { className: 'info-value' }, summary.riskLevel.toUpperCase())
+          ),
+          React.createElement('div', { className: 'info-item' },
+            React.createElement('div', { className: 'info-label' }, 'Issues Found'),
+            React.createElement('div', { className: 'info-value' }, summary.totalIssues)
+          ),
+          React.createElement('div', { className: 'info-item' },
+            React.createElement('div', { className: 'info-label' }, 'Warnings'),
+            React.createElement('div', { className: 'info-value' }, summary.totalWarnings)
+          )
+        ),
+
+        // Risk Explanation for moderate/high/critical risks
+        showRiskExplanation && aiAnalysis?.riskExplanation &&
+          React.createElement('div', { className: `risk-explanation ${riskLevel}` },
+            React.createElement('h4', null, '⚠️ Risk Assessment'),
+            React.createElement('p', null, aiAnalysis.riskExplanation)
+          ),
+
+        // Detected Intent
+        aiAnalysis?.detectedIntent &&
+          React.createElement('div', { className: 'detected-intent' },
+            React.createElement('strong', null, '🎯 Detected Intent'),
+            React.createElement('p', null, aiAnalysis.detectedIntent)
+          ),
+
+        // Get Rewrite Button
+        hasIssues &&
+          React.createElement('div', { className: 'button-group' },
+            React.createElement('button', {
+              className: 'rewrite-button',
+              onClick: () => setShowRewrite(!showRewrite)
+            }, showRewrite ? 'Hide Compliant Rewrite' : '✨ Get Compliant Rewrite')
+          ),
+
+        // Show rewrite if button clicked
+        showRewrite && summary.rewrittenMessage &&
+          React.createElement('div', { className: 'rewrite-container' },
+            React.createElement('div', { className: 'rewrite-box' },
+              React.createElement('h4', null, '✨ Suggested Compliant Version'),
+              React.createElement('div', { className: 'rewrite-text' }, summary.rewrittenMessage),
+              summary.rewriteExplanation && React.createElement('p', {
+                style: { fontSize: '12px', color: '#065f46', marginTop: '8px', fontStyle: 'italic' }
+              }, summary.rewriteExplanation)
+            )
+          ),
+
+        // Show explanation if no rewrite is possible
+        showRewrite && !summary.rewrittenMessage && summary.rewriteExplanation &&
+          React.createElement('div', { className: 'no-rewrite-explanation' },
+            React.createElement('strong', null, '⚠️ Cannot Generate Compliant Rewrite'),
+            React.createElement('p', null, summary.rewriteExplanation)
+          ),
+
+        showRewrite && aiAnalysis?.compliantRewrite && !summary.rewrittenMessage &&
+          React.createElement('div', { className: 'rewrite-container' },
+            React.createElement('div', { className: 'rewrite-box' },
+              React.createElement('h4', null, '✨ AI-Generated Compliant Version'),
+              React.createElement('div', { className: 'rewrite-text' }, aiAnalysis.compliantRewrite)
+            )
+          ),
+
+        // Rule-Based Checks
+        (ruleBasedChecks.violations.length > 0 || ruleBasedChecks.warnings.length > 0) &&
+          React.createElement('div', { className: 'section' },
+            React.createElement('h3', null, '🔍 Rule-Based Checks'),
+            ruleBasedChecks.violations.map((v, i) =>
+              React.createElement('div', { key: `viol-${i}`, className: `issue-item ${v.severity}` },
+                React.createElement('strong', null, v.description),
+                React.createElement('span', { className: `severity-badge severity-${v.severity}` }, v.severity),
+                v.explanation && React.createElement('div', { className: 'issue-explanation' },
+                  v.explanation
+                ),
+                v.matchedKeywords && v.matchedKeywords.length > 0 && React.createElement('p', {
+                  style: { fontSize: '13px', marginTop: '8px', color: '#666' }
+                }, `Matched keywords: ${v.matchedKeywords.join(', ')}`),
+                v.sourceLinks && v.sourceLinks.length > 0 &&
+                  React.createElement('div', { className: 'source-links' },
+                    v.sourceLinks.map((link, j) =>
+                      React.createElement('a', {
+                        key: `viol-src-${i}-${j}`,
+                        href: link,
+                        target: '_blank',
+                        rel: 'noopener noreferrer',
+                        className: 'source-link'
+                      }, 'Learn More')
+                    )
+                  )
+              )
+            ),
+            ruleBasedChecks.warnings.map((w, i) =>
+              React.createElement('div', { key: `warn-${i}`, className: `issue-item ${w.severity}` },
+                React.createElement('strong', null, w.description),
+                React.createElement('span', { className: `severity-badge severity-${w.severity}` }, w.severity),
+                w.explanation && React.createElement('div', { className: 'issue-explanation' },
+                  w.explanation
+                ),
+                w.sourceLinks && w.sourceLinks.length > 0 &&
+                  React.createElement('div', { className: 'source-links' },
+                    w.sourceLinks.map((link, j) =>
+                      React.createElement('a', {
+                        key: `warn-src-${i}-${j}`,
+                        href: link,
+                        target: '_blank',
+                        rel: 'noopener noreferrer',
+                        className: 'source-link'
+                      }, 'Learn More')
+                    )
+                  )
+              )
+            )
+          ),
+
+        // AI Analysis - Issues
+        aiAnalysis?.issues && aiAnalysis.issues.length > 0 &&
+          React.createElement('div', { className: 'section' },
+            React.createElement('h3', null, '🤖 AI Analysis - Issues'),
+            aiAnalysis.issues.map((issue, i) =>
+              React.createElement('div', { key: `issue-${i}`, className: `issue-item ${issue.severity}` },
+                React.createElement('strong', null, issue.description),
+                React.createElement('span', { className: `severity-badge severity-${issue.severity}` }, issue.severity),
+                issue.explanation && React.createElement('div', { className: 'issue-explanation' },
+                  issue.explanation
+                ),
+                issue.policyReference && React.createElement('p', {
+                  style: { fontSize: '13px', marginTop: '8px', color: '#666' }
+                }, `Policy: ${issue.policyReference}`),
+                issue.sourceLinks && issue.sourceLinks.length > 0 &&
+                  React.createElement('div', { className: 'source-links' },
+                    issue.sourceLinks.map((link, j) =>
+                      React.createElement('a', {
+                        key: `src-${i}-${j}`,
+                        href: link,
+                        target: '_blank',
+                        rel: 'noopener noreferrer',
+                        className: 'source-link'
+                      }, 'Learn More')
+                    )
+                  )
+              )
+            )
+          ),
+
+        // AI Analysis - Warnings
+        aiAnalysis?.warnings && aiAnalysis.warnings.length > 0 &&
+          React.createElement('div', { className: 'section' },
+            React.createElement('h3', null, '⚠️ AI Analysis - Warnings'),
+            aiAnalysis.warnings.map((warning, i) =>
+              React.createElement('div', { key: `ai-warn-${i}`, className: `issue-item ${warning.severity}` },
+                React.createElement('strong', null, warning.description),
+                React.createElement('span', { className: `severity-badge severity-${warning.severity}` }, warning.severity),
+                warning.explanation && React.createElement('div', { className: 'issue-explanation' },
+                  warning.explanation
+                ),
+                warning.sourceLinks && warning.sourceLinks.length > 0 &&
+                  React.createElement('div', { className: 'source-links' },
+                    warning.sourceLinks.map((link, j) =>
+                      React.createElement('a', {
+                        key: `warn-src-${i}-${j}`,
+                        href: link,
+                        target: '_blank',
+                        rel: 'noopener noreferrer',
+                        className: 'source-link'
+                      }, 'Learn More')
+                    )
+                  )
+              )
+            )
+          ),
+
+        // Recommendations
+        summary.recommendations && summary.recommendations.length > 0 &&
+          React.createElement('div', { className: 'section' },
+            React.createElement('h3', null, '💡 Recommendations'),
+            summary.recommendations.map((rec, i) =>
+              React.createElement('div', { key: `rec-${i}`, className: 'recommendation-item' },
+                React.createElement('strong', null, rec.issue),
+                React.createElement('p', { style: { marginTop: '8px' } }, rec.suggestion),
+                rec.rewriteExample && React.createElement('div', {
+                  style: {
+                    marginTop: '8px',
+                    padding: '8px',
+                    background: '#f3f4f6',
+                    borderRadius: '4px',
+                    fontSize: '13px',
+                    fontStyle: 'italic'
+                  }
+                }, `Example: "${rec.rewriteExample}"`)
+              )
+            )
+          )
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(React.createElement(App));
+  </script>
+</body>
+</html>

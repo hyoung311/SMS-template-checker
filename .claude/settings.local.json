@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(node *)",
+      "Bash(curl -s http://localhost:3001/api/health)",
+      "Bash(lsof -ti:3001)",
+      "Bash(xargs kill -9)",
+      "Bash(npm start *)",
+      "Bash(curl -s -X POST http://localhost:3001/api/check-compliance -H 'Content-Type: application/json' -d '{\"messageBody\":\"Hey Blaine- I'\\\\''ve got an update on your financing application! Ian Perrott NPF Approvals Team\"}')",
+      "Bash(curl -s -X POST http://localhost:3001/api/check-compliance -H 'Content-Type: application/json' -d '{\"messageBody\":\"HUGE DISCOUNT!!! Shop at bit.ly/deal\"}')"
+    ]
+  }
+}
