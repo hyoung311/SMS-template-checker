@@ -1,6 +1,6 @@
-# Twilio SMS Compliance Checker
+# SMS Compliance Checker
 
-A comprehensive web application that checks SMS message content against Twilio's messaging policies, US regulatory guidelines (TCPA, CTIA, HIPAA, PCI-DSS), and acceptable use policies. Uses a hybrid approach combining extensive rule-based checks with AI-powered analysis.
+A web application that checks SMS message content against Twilio's messaging policies, US regulatory guidelines (TCPA, CTIA, HIPAA, PCI-DSS), and acceptable use policies. Uses a hybrid approach combining extensive rule-based checks with AI-powered analysis. This is an unofficial compliance tool that can be cloned to use as a starting point for compliance checks for SMS bodies prior to sending if a user wants to understand the likelihood that their message would be noncompliant. 
 
 ## 🚀 Key Features
 
